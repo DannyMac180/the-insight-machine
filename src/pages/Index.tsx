@@ -18,11 +18,14 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch the session when component mounts
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session:", session);
+    // Check session on mount
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Checking session:", session);
       setUser(session?.user || null);
-    });
+    };
+    
+    checkSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -30,8 +33,17 @@ const Index = () => {
       setUser(session?.user || null);
     });
 
+    // Listen for our custom sign-in event
+    const handleSignIn = () => {
+      console.log("Custom sign-in event received");
+      checkSession();
+    };
+
+    window.addEventListener('supabase.auth.sign-in', handleSignIn);
+
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('supabase.auth.sign-in', handleSignIn);
     };
   }, []);
 
