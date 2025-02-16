@@ -8,20 +8,25 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import InsightDisplay from "@/components/InsightDisplay";
+import { User } from "@supabase/supabase-js";
 
 const Index = () => {
   const [input, setInput] = React.useState("");
   const [insight, setInsight] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // Fetch the session when component mounts
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session:", session);
       setUser(session?.user || null);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
       setUser(session?.user || null);
     });
 
@@ -30,9 +35,10 @@ const Index = () => {
     };
   }, []);
 
-  const handleAuth = () => {
+  const handleAuth = async () => {
     if (user) {
-      supabase.auth.signOut();
+      await supabase.auth.signOut();
+      setUser(null);
     } else {
       navigate('/auth');
     }
