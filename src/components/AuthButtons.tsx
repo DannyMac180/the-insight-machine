@@ -4,7 +4,7 @@ import { GithubIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export const AuthButtons = () => {
-  const handleSocialLogin = async (provider: 'github' | 'twitter' | 'google') => {
+  const handleSocialLogin = async (provider: 'github' | 'google') => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -42,19 +42,6 @@ export const AuthButtons = () => {
       >
         <GithubIcon className="w-5 h-5" />
         Continue with GitHub
-      </Button>
-      <Button
-        variant="outline"
-        className="flex items-center gap-2"
-        onClick={() => handleSocialLogin('twitter')}
-      >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-          />
-        </svg>
-        Continue with X
       </Button>
     </div>
   );
