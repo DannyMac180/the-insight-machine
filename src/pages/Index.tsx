@@ -1,14 +1,15 @@
-
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import InsightDisplay from "@/components/InsightDisplay";
 import { User } from "@supabase/supabase-js";
+import { Upload } from "lucide-react";
 
 const Index = () => {
   const [input, setInput] = React.useState("");
@@ -56,9 +57,55 @@ const Index = () => {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!user) {
+      toast.error("Please sign in to upload documents");
+      return;
+    }
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a PDF, Word document, or text file");
+      return;
+    }
+
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke('process-document', {
+        body: formData,
+        headers: {
+          'x-user-id': user.id,
+        }
+      });
+
+      if (response.error) throw response.error;
+
+      setInput(response.data.text);
+      toast.success("Document uploaded and processed successfully");
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error("Failed to process document");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const generateInsight = async () => {
     if (!input.trim()) {
-      toast.error("Please enter some text to generate insights");
+      toast.error("Please enter some text or upload a document to generate insights");
       return;
     }
     setIsLoading(true);
@@ -101,18 +148,47 @@ const Index = () => {
 
           <Card className="p-6 backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 shadow-lg">
             <div className="space-y-4">
-              <Textarea
-                placeholder="Share your thoughts..."
-                className="min-h-[200px] resize-none text-lg p-4"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label 
+                  htmlFor="file-upload"
+                  className="flex-shrink-0"
+                >
+                  <Button 
+                    variant="outline" 
+                    className="cursor-pointer"
+                    disabled={isLoading}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Document
+                  </Button>
+                </label>
+                <p className="text-sm text-muted-foreground">
+                  Upload a PDF, Word doc, or text file
+                </p>
+              </div>
+
+              <div className="relative">
+                <Textarea
+                  placeholder="Share your thoughts or upload a document..."
+                  className="min-h-[200px] resize-none text-lg p-4"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              </div>
+
               <Button
                 className="w-full"
                 onClick={generateInsight}
                 disabled={isLoading}
               >
-                {isLoading ? "Generating..." : "Generate Insight"}
+                {isLoading ? "Processing..." : "Generate Insight"}
               </Button>
             </div>
           </Card>
