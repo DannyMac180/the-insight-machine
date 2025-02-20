@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -148,7 +149,24 @@ const Index = () => {
 
           <Card className="p-6 backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 shadow-lg">
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
+              <div className="relative">
+                <Textarea
+                  placeholder="Share your thoughts or upload a document..."
+                  className="min-h-[200px] resize-none text-lg p-4"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={generateInsight}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Generate Insight"}
+              </Button>
+
+              <div className="flex items-center gap-2">
                 <Input
                   type="file"
                   accept=".pdf,.doc,.docx,.txt"
@@ -173,23 +191,6 @@ const Index = () => {
                   Upload a PDF, Word doc, or text file
                 </p>
               </div>
-
-              <div className="relative">
-                <Textarea
-                  placeholder="Share your thoughts or upload a document..."
-                  className="min-h-[200px] resize-none text-lg p-4"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                />
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={generateInsight}
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : "Generate Insight"}
-              </Button>
             </div>
           </Card>
 
