@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,31 +11,25 @@ import { useNavigate } from "react-router-dom";
 import InsightDisplay from "@/components/InsightDisplay";
 import { User } from "@supabase/supabase-js";
 import { Upload } from "lucide-react";
+
 const Index = () => {
   const [input, setInput] = React.useState("");
   const [insight, setInsight] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     // Check session on mount
     const checkSession = async () => {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       console.log("Checking session:", session);
       setUser(session?.user || null);
     };
     checkSession();
 
     // Listen for auth state changes
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       setUser(session?.user || null);
     });
@@ -45,11 +40,13 @@ const Index = () => {
       checkSession();
     };
     window.addEventListener('supabase.auth.sign-in', handleSignIn);
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('supabase.auth.sign-in', handleSignIn);
     };
   }, []);
+
   const handleAuth = async () => {
     if (user) {
       await supabase.auth.signOut();
@@ -58,34 +55,37 @@ const Index = () => {
       navigate('/auth');
     }
   };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     if (!user) {
       toast.error("Please sign in to upload documents");
       return;
     }
+
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
     if (!allowedTypes.includes(file.type)) {
       toast.error("Please upload a PDF, Word document, or text file");
       return;
     }
+
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
+
     try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('process-document', {
         body: formData,
         headers: {
           'x-user-id': user.id
         }
       });
+
       if (response.error) throw response.error;
+
       setInput(response.data.text);
       toast.success("Document uploaded and processed successfully");
     } catch (error) {
@@ -95,6 +95,7 @@ const Index = () => {
       setIsLoading(false);
     }
   };
+
   const generateInsight = async () => {
     if (!input.trim()) {
       toast.error("Please enter some text or upload a document to generate insights");
@@ -115,6 +116,7 @@ const Index = () => {
       setIsLoading(false);
     }
   };
+
   return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="flex justify-end mb-4">
@@ -180,4 +182,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
