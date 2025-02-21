@@ -9,13 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import InsightDisplay from "@/components/InsightDisplay";
 import { User } from "@supabase/supabase-js";
-import { Upload } from "lucide-react";
+import { Upload, Check } from "lucide-react";
 
 const Index = () => {
   const [input, setInput] = React.useState("");
   const [insight, setInsight] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [uploadSuccess, setUploadSuccess] = React.useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,6 +85,7 @@ const Index = () => {
 
       setInput(response.data.text);
       toast.success("Document uploaded and processed successfully");
+      setUploadSuccess(true);
     } catch (error) {
       console.error('Error uploading document:', error);
       toast.error("Failed to process document");
@@ -168,6 +170,12 @@ const Index = () => {
               <p className="text-sm text-muted-foreground text-center">
                 Upload a PDF, Word doc, or Text file
               </p>
+              {uploadSuccess && (
+                <div className="flex items-center justify-center mt-2 text-green-600">
+                  <Check className="w-4 h-4 mr-1" />
+                  File uploaded successfully!
+                </div>
+              )}
             </div>
           </Card>
 
